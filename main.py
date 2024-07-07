@@ -1,14 +1,21 @@
-# main.py
-
 import argparse
 from diff_match_patch import DiffMatchPatch
 
 def main():
     parser = argparse.ArgumentParser(description="Diff Match Patch API")
-    parser.add_argument("operation", choices=["diff", "match", "patch"], help="Operation to perform")
-    parser.add_argument("text1", help="First text or the main text")
-    parser.add_argument("text2", nargs='?', default="", help="Second text or the pattern (optional for patching)")
-    parser.add_argument("pattern", nargs='?', default="", help="Pattern to match (required for match operation)")
+    subparsers = parser.add_subparsers(dest="operation")
+
+    diff_parser = subparsers.add_parser("diff", help="Compute differences between two texts")
+    diff_parser.add_argument("text1", help="First text")
+    diff_parser.add_argument("text2", help="Second text")
+
+    match_parser = subparsers.add_parser("match", help="Find the best match of a pattern within a text")
+    match_parser.add_argument("text", help="Text to search in")
+    match_parser.add_argument("pattern", help="Pattern to match")
+
+    patch_parser = subparsers.add_parser("patch", help="Transform text1 into text2 using patches")
+    patch_parser.add_argument("text1", help="Original text")
+    patch_parser.add_argument("text2", help="Target text")
 
     args = parser.parse_args()
 
@@ -18,10 +25,7 @@ def main():
         diffs = dmp.diff_main(args.text1, args.text2)
         print("Diffs:", diffs)
     elif args.operation == "match":
-        if not args.pattern:
-            print("Error: The 'match' operation requires a 'pattern' argument.")
-            return
-        loc = dmp.match_main(args.text1, args.pattern)
+        loc = dmp.match_main(args.text, args.pattern)
         print("Best match found at index:", loc)
     elif args.operation == "patch":
         patches = dmp.patch_make(args.text1, args.text2)
