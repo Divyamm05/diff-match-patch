@@ -1,15 +1,6 @@
 class DiffMatchPatch:
-    """
-    Implements the Diff Match Patch algorithm for computing differences between texts,
-    finding matches within a text, and applying patches to transform one text into another.
-    """
 
     def diff_main(self, text1, text2):
-        """
-        Compute the differences between two texts.
-        Returns a list of tuples, where each tuple contains a diff operation (-1 for delete, 1 for insert, 0 for unchanged)
-        and the corresponding substring.
-        """
         if text1 == text2:
             return [(0, text1)]
 
@@ -34,10 +25,6 @@ class DiffMatchPatch:
         return diffs
 
     def _common_prefix(self, text1, text2):
-        """
-        Find the common prefix of two texts.
-        Returns the length of the common prefix.
-        """
         n = min(len(text1), len(text2))
         for i in range(n):
             if text1[i] != text2[i]:
@@ -45,10 +32,6 @@ class DiffMatchPatch:
         return n
 
     def _common_suffix(self, text1, text2):
-        """
-        Find the common suffix of two texts.
-        Returns the length of the common suffix.
-        """
         n = min(len(text1), len(text2))
         for i in range(1, n + 1):
             if text1[-i] != text2[-i]:
@@ -56,24 +39,23 @@ class DiffMatchPatch:
         return n
 
     def _diff_compute(self, text1, text2):
-        """
-        Find the differences between two texts using a simple greedy algorithm.
-        Returns a list of tuples representing the differences.
-        """
-        diffs = []
-        len1, len2 = len(text1), len(text2)
-        i, j = 0, 0
+        if not text1:
+            return [(1, text2)]
+        if not text2:
+            return [(-1, text1)]
 
+        len1, len2 = len(text1), len(text2)
+        diffs = []
+
+        i, j = 0, 0
         while i < len1 and j < len2:
             if text1[i] == text2[j]:
-                # Find matching substring
                 start = i
                 while i < len1 and j < len2 and text1[i] == text2[j]:
                     i += 1
                     j += 1
                 diffs.append((0, text1[start:i]))
             else:
-                # Find non-matching substrings
                 start_i, start_j = i, j
                 while i < len1 and j < len2 and text1[i] != text2[j]:
                     i += 1
@@ -88,13 +70,23 @@ class DiffMatchPatch:
         if j < len2:
             diffs.append((1, text2[j:]))
 
-        return diffs
+        merged_diffs = self._merge_diffs(diffs)
+        return merged_diffs
+
+    def _merge_diffs(self, diffs):
+        if not diffs:
+            return []
+
+        merged_diffs = [diffs[0]]
+        for diff in diffs[1:]:
+            if diff[0] == merged_diffs[-1][0]:
+                merged_diffs[-1] = (merged_diffs[-1][0], merged_diffs[-1][1] + diff[1])
+            else:
+                merged_diffs.append(diff)
+
+        return merged_diffs
 
     def match_main(self, text, pattern):
-        """
-        Find the best match of a substring in a text using a simple heuristic.
-        Returns the index of the best match or -1 if no match is found.
-        """
         pattern_length = len(pattern)
         best_loc = -1
         best_score = float('inf')
@@ -108,10 +100,6 @@ class DiffMatchPatch:
         return best_loc
 
     def patch_make(self, text1, text2):
-        """
-        Create a list of patches to convert text1 into text2.
-        Returns a list of dictionaries, where each dictionary contains details about a patch.
-        """
         diffs = self.diff_main(text1, text2)
         patches = []
         start = 0
@@ -132,10 +120,6 @@ class DiffMatchPatch:
         return patches
 
     def patch_apply(self, patches, text):
-        """
-        Apply a list of patches to a text.
-        Returns the modified text after applying all patches.
-        """
         shift = 0
         for patch in patches:
             start = patch['start'] + shift
@@ -144,4 +128,3 @@ class DiffMatchPatch:
             shift += len(patch['insert']) - len(patch['delete'])
 
         return text
-
